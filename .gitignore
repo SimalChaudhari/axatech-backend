@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Local env (secrets)
+.env
+.env.local
+.env.*.local
+
+# Uploads (user-generated content, if stored in repo)
+uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Optional
+.cache/
+coverage/
+.nyc_output/
