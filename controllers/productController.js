@@ -16,7 +16,10 @@ export const getProducts = async (req, res) => {
     const { category, featured, search, page = 1, limit = 12, all } = req.query;
     const filter = {};
     if (!all) filter.isActive = true;
-    if (category) filter.category = category;
+    if (category) {
+      const ids = typeof category === 'string' ? category.split(',').map((s) => s.trim()).filter(Boolean) : [category];
+      filter.category = ids.length > 1 ? { $in: ids } : ids[0];
+    }
     if (featured === 'true') filter.featured = true;
     if (search) {
       const re = new RegExp(search, 'i');
