@@ -6,8 +6,20 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadDir = process.env.UPLOAD_PATH || './uploads';
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+// On Vercel the project dir is read-only; use /tmp so the function doesn't crash
+const uploadDir =
+  process.env.VERCEL === '1'
+    ? path.join('/tmp', 'uploads')
+    : (process.env.UPLOAD_PATH || path.join(__dirname, '..', 'uploads'));
+
+if (!fs.existsSync(uploadDir)) {
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  } catch (err) {
+    if (process.env.VERCEL !== '1') throw err;
+    // On Vercel, /tmp/uploads should succeed; ignore other failures
+  }
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
