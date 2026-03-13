@@ -23,7 +23,9 @@ connectDB();
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
+// Strip trailing slash so CORS origin matches browser (e.g. https://axatech-frontend.vercel.app)
+const corsOrigin = process.env.CLIENT_URL?.replace(/\/$/, '') || '*';
+app.use(cors({ origin: corsOrigin, credentials: true }));
 const uploadsDir = path.join(__dirname, process.env.UPLOAD_PATH || 'uploads');
 if (existsSync(uploadsDir)) {
   app.use('/uploads', express.static(uploadsDir));
