@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import homeRoutes from './routes/homeRoutes.js';
@@ -23,7 +24,10 @@ connectDB();
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
-app.use('/uploads', express.static(path.join(__dirname, process.env.UPLOAD_PATH || 'uploads')));
+const uploadsDir = path.join(__dirname, process.env.UPLOAD_PATH || 'uploads');
+if (existsSync(uploadsDir)) {
+  app.use('/uploads', express.static(uploadsDir));
+}
 
 app.use('/api/auth', authRoutes);
 app.use('/api/home', homeRoutes);
