@@ -19,10 +19,17 @@ import uploadRoutes from './routes/uploadRoutes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-connectDB();
+// Start connection in background when running locally
+if (process.env.VERCEL !== '1') connectDB();
 
 const app = express();
 app.use(express.json());
+
+// Ensure DB is connected before any API handler (fixes Vercel cold start / buffering timeout)
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 // Strip trailing slash so CORS origin matches browser (e.g. https://axatech-frontend.vercel.app)
 const corsOrigin = process.env.CLIENT_URL?.replace(/\/$/, '') || '*';
 app.use(cors({ origin: corsOrigin, credentials: true }));
