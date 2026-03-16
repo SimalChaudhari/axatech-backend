@@ -1,14 +1,14 @@
 import mongoose from 'mongoose';
-import User from '../models/User.js';
-import HomeContent from '../models/HomeContent.js';
-import Service from '../models/Service.js';
-import Category from '../models/Category.js';
-import LicensePlan from '../models/LicensePlan.js';
-import CloudPlan from '../models/CloudPlan.js';
-import Product from '../models/Product.js';
-import Blog from '../models/Blog.js';
-import Enquiry from '../models/Enquiry.js';
 import 'dotenv/config';
+import User from '../auth/User.js';
+import HomeContent from '../home/HomeContent.js';
+import Service from '../services/Service.js';
+import Category from '../categories/Category.js';
+import LicensePlan from '../licenses/LicensePlan.js';
+import CloudPlan from '../cloud/CloudPlan.js';
+import Product from '../products/Product.js';
+import Blog from '../blog/Blog.js';
+import Enquiry from '../enquiries/Enquiry.js';
 
 const dropFirst = process.env.DROP === '1' || process.argv.includes('--drop');
 

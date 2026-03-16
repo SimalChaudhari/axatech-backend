@@ -7,7 +7,7 @@ node_modules/
 .env.*.local
 
 # Uploads (user-generated content, if stored in repo)
-uploads/
+# uploads/
 
 # Logs
 logs/

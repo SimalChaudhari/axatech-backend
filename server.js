@@ -5,16 +5,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
-import homeRoutes from './routes/homeRoutes.js';
-import licenseRoutes from './routes/licenseRoutes.js';
-import categoryRoutes from './routes/categoryRoutes.js';
-import productRoutes from './routes/productRoutes.js';
-import serviceRoutes from './routes/serviceRoutes.js';
-import cloudRoutes from './routes/cloudRoutes.js';
-import enquiryRoutes from './routes/enquiryRoutes.js';
-import blogRoutes from './routes/blogRoutes.js';
-import uploadRoutes from './routes/uploadRoutes.js';
+import authRoutes from './auth/routes.js';
+import homeRoutes from './home/routes.js';
+import licenseRoutes from './licenses/routes.js';
+import categoryRoutes from './categories/routes.js';
+import productRoutes from './products/routes.js';
+import serviceRoutes from './services/routes.js';
+import cloudRoutes from './cloud/routes.js';
+import enquiryRoutes from './enquiries/routes.js';
+import blogRoutes from './blog/routes.js';
+import uploadRoutes from './upload/routes.js';
+import projectRoutes from './projects/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +49,7 @@ app.use('/api/cloud', cloudRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/projects', projectRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
