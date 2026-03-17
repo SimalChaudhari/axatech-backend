@@ -15,6 +15,7 @@ const uploadDir =
 const productImagesDir = path.join(uploadDir, 'productimages');
 const productVideosDir = path.join(uploadDir, 'productvideos');
 const projectImagesDir = path.join(uploadDir, 'projectimages');
+const technologieImagesDir = path.join(uploadDir, 'TechnologieImages');
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) {
@@ -29,6 +30,7 @@ ensureDir(uploadDir);
 ensureDir(productImagesDir);
 ensureDir(productVideosDir);
 ensureDir(projectImagesDir);
+ensureDir(technologieImagesDir);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -51,6 +53,16 @@ const projectImageStorage = multer.diskStorage({
   },
 });
 
+const technologieImageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, technologieImagesDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+
 const fileFilter = (req, file, cb) => {
   const allowed = /image\/|video\//;
   if (allowed.test(file.mimetype)) cb(null, true);
@@ -60,6 +72,11 @@ const fileFilter = (req, file, cb) => {
 export const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 export const uploadProjectImage = multer({
   storage: projectImageStorage,
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+export const uploadTechnologieImage = multer({
+  storage: technologieImageStorage,
   fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 },
 });

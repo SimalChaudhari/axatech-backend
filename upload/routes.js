@@ -1,5 +1,5 @@
 import express from 'express';
-import { upload, uploadProjectImage } from '../middleware/upload.js';
+import { upload, uploadProjectImage, uploadTechnologieImage } from '../middleware/upload.js';
 import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -17,6 +17,15 @@ router.post('/', protect, admin, upload.single('file'), (req, res) => {
 router.post('/project-image', protect, admin, uploadProjectImage.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
   const subDir = 'projectimages';
+  const filenameWithDir = `${subDir}/${req.file.filename}`;
+  const url = `${req.protocol}://${req.get('host')}/uploads/${filenameWithDir}`;
+  res.json({ url, filename: filenameWithDir });
+});
+
+// Technology images stored in uploads/TechnologieImages
+router.post('/technology-image', protect, admin, uploadTechnologieImage.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+  const subDir = 'TechnologieImages';
   const filenameWithDir = `${subDir}/${req.file.filename}`;
   const url = `${req.protocol}://${req.get('host')}/uploads/${filenameWithDir}`;
   res.json({ url, filename: filenameWithDir });

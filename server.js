@@ -16,6 +16,7 @@ import enquiryRoutes from './enquiries/routes.js';
 import blogRoutes from './blog/routes.js';
 import uploadRoutes from './upload/routes.js';
 import projectRoutes from './projects/routes.js';
+import technologyRoutes from './technologies/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,6 +51,7 @@ app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/technologies', technologyRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
