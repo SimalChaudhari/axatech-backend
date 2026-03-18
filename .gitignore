@@ -2,8 +2,6 @@
 node_modules/
 
 # Local env (secrets)
-.env
-.env.local
 .env.*.local
 
 # Uploads (user-generated content, if stored in repo)
@@ -32,3 +30,4 @@ Thumbs.db
 .cache/
 coverage/
 .nyc_output/
+config.bat

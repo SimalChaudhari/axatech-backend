@@ -7,7 +7,7 @@ const enquirySchema = new mongoose.Schema({
   phone: String,
   company: String,
   message: String,
-  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
   licensePlan: { type: mongoose.Schema.Types.ObjectId, ref: 'LicensePlan' },
   cloudPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'CloudPlan' },

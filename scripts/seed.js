@@ -159,7 +159,7 @@ async function seed() {
     const cloudPlansForEnquiry = await CloudPlan.find().limit(1);
     await Enquiry.insertMany([
       { type: 'contact', name: 'Vikram Singh', email: 'vikram@company.com', phone: '+91 9876512345', company: 'Singh Enterprises', message: 'I need information about Tally licensing for our new branch.', status: 'New', adminNotes: '' },
-      { type: 'product', name: 'Anita Desai', email: 'anita@retail.com', phone: '+91 8765432109', company: 'Desai Retail', message: 'Interested in Stock Alert Pro for our warehouse.', product: products[0]?._id, status: 'Contacted', adminNotes: 'Called and sent quote.' },
+      { type: 'product', name: 'Anita Desai', email: 'anita@retail.com', phone: '+91 8765432109', company: 'Desai Retail', message: 'Interested in Stock Alert Pro for our warehouse.', products: [products[0]?._id], status: 'Contacted', adminNotes: 'Called and sent quote.' },
       { type: 'service', name: 'Rajesh Kumar', email: 'rajesh@tech.in', phone: '+91 7654321098', company: 'Kumar Tech', message: 'We need WhatsApp integration for Tally.', service: services[0]?._id, status: 'New', adminNotes: '' },
       { type: 'license', name: 'Sneha Patel', email: 'sneha@patel.com', phone: '+91 6543210987', company: 'Patel & Co', message: 'Please quote for 5-user Tally Prime license.', licensePlan: licensePlans[0]?._id, status: 'Closed', adminNotes: 'Deal closed. Invoice sent.' },
       { type: 'cloud', name: 'Mohit Agarwal', email: 'mohit@agarwal.in', phone: '+91 5432109876', company: 'Agarwal Traders', message: 'Need VPS plan for Tally. 3 users.', cloudPlan: cloudPlansForEnquiry[0]?._id, status: 'New', adminNotes: '' },
