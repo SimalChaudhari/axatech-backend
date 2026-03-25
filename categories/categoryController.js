@@ -2,9 +2,26 @@ import Category from './Category.js';
 
 export const getCategories = async (req, res) => {
   try {
-    const { all } = req.query;
+    const { all, status, search } = req.query;
+
     const filter = {};
-    if (!all) filter.isActive = true;
+    const includeAll = all === '1' || all === 'true' || all === true;
+
+    if (status === 'active') filter.isActive = true;
+    else if (status === 'inactive') filter.isActive = false;
+    else if (status === 'all') {
+      // no isActive filter
+    } else if (!includeAll) {
+      // backward compatibility: old behavior returned active only
+      filter.isActive = true;
+    }
+
+    if (typeof search === 'string' && search.trim()) {
+      const q = search.trim();
+      const re = new RegExp(q, 'i');
+      filter.$or = [{ name: re }, { slug: re }, { description: re }];
+    }
+
     const categories = await Category.find(filter).sort('sortOrder');
     res.json(categories);
   } catch (err) {
