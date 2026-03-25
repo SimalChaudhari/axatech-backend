@@ -30,16 +30,77 @@ export const createEnquiry = async (req, res) => {
 
 export const getEnquiries = async (req, res) => {
   try {
-    const { status, type, page = 1, limit = 20 } = req.query;
-    const filter = {};
-    if (status) filter.status = status;
-    if (type) filter.type = type;
-    const skip = (Number(page) - 1) * Number(limit);
-    const [enquiries, total] = await Promise.all([
-      Enquiry.find(filter).populate('products service licensePlan cloudPlan').sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
-      Enquiry.countDocuments(filter),
-    ]);
-    res.json({ enquiries, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    const {
+      status,
+      type,
+      search,
+      page = 1,
+      limit = 20,
+    } = req.query;
+
+    const pageNum = Number(page) > 0 ? Number(page) : 1;
+    const limitNum = Number(limit) > 0 ? Number(limit) : 20;
+    const skip = (pageNum - 1) * limitNum;
+
+    const normalizedSearch = typeof search === 'string' ? search.trim() : '';
+    const hasSearch =
+      normalizedSearch &&
+      normalizedSearch !== 'undefined' &&
+      normalizedSearch !== 'null';
+
+    const statusFilter =
+      status && status !== 'all' && status !== '' ? status : null;
+
+    const baseFilter = {};
+    if (type) baseFilter.type = type;
+    if (hasSearch) {
+      const re = new RegExp(normalizedSearch, 'i');
+      baseFilter.$or = [
+        { name: re },
+        { email: re },
+        { type: re },
+        { company: re },
+        { message: re },
+      ];
+    }
+
+    const listFilter = { ...baseFilter };
+    if (statusFilter) listFilter.status = statusFilter;
+
+    const [enquiries, total, totalAll, totalNew, totalContacted, totalClosed] =
+      await Promise.all([
+        Enquiry.find(listFilter)
+          .populate('products service licensePlan cloudPlan')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limitNum),
+        Enquiry.countDocuments(listFilter),
+        Enquiry.countDocuments(baseFilter),
+        Enquiry.countDocuments({ ...baseFilter, status: 'New' }),
+        Enquiry.countDocuments({ ...baseFilter, status: 'Contacted' }),
+        Enquiry.countDocuments({ ...baseFilter, status: 'Closed' }),
+      ]);
+
+    const pages = Math.ceil(total / limitNum) || 0;
+
+    res.json({
+      enquiries,
+      total,
+      page: pageNum,
+      pages,
+      totalPages: pages,
+      pagination: {
+        totalPages: pages,
+        total,
+        page: pageNum,
+      },
+      counts: {
+        all: totalAll,
+        New: totalNew,
+        Contacted: totalContacted,
+        Closed: totalClosed,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

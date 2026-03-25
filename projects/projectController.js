@@ -58,14 +58,109 @@ const addImageUrl = (item, req) => {
 
 export const getProjects = async (req, res) => {
   try {
-    const { category, all } = req.query;
-    const filter = {};
-    if (!all) filter.isActive = true;
-    if (category) filter.category = category;
+    const {
+      category,
+      status,
+      search,
+      all,
+      page,
+      limit,
+      sortKey = 'sortOrder',
+      sortDirection = 'asc',
+    } = req.query;
 
-    const projects = await Project.find(filter).sort('sortOrder');
+    const includeAll = all === '1' || all === 'true' || all === true;
+
+    // Base filter (ignore isActive here, only apply status later)
+    const baseFilter = {};
+
+    if (category) {
+      const ids =
+        typeof category === 'string'
+          ? category.split(',').map((s) => s.trim()).filter(Boolean)
+          : [category];
+      baseFilter.category = ids.length > 1 ? { $in: ids } : ids[0];
+    }
+
+    const normalizedSearch = typeof search === 'string' ? search.trim() : '';
+    if (
+      normalizedSearch &&
+      normalizedSearch !== 'undefined' &&
+      normalizedSearch !== 'null'
+    ) {
+      const q = normalizedSearch;
+      const re = new RegExp(q, 'i');
+      baseFilter.$or = [{ title: re }, { category: re }, { webLink: re }, { description: re }];
+    }
+
+    // List filter: apply status or fallback to old `all` behaviour
+    const listFilter = { ...baseFilter };
+    if (status === 'active') {
+      listFilter.isActive = true;
+    } else if (status === 'inactive') {
+      listFilter.isActive = false;
+    } else if (status === 'all') {
+      // no isActive filter
+    } else if (!includeAll) {
+      // legacy: if `all` is missing => active only
+      listFilter.isActive = true;
+    }
+
+    // Sorting
+    const dir = String(sortDirection).toLowerCase() === 'desc' ? -1 : 1;
+    const sortFieldMap = {
+      title: 'title',
+      category: 'category',
+      webLink: 'webLink',
+      isActive: 'isActive',
+      sortOrder: 'sortOrder',
+    };
+    const sortField = sortFieldMap[sortKey] || 'sortOrder';
+    const sortObj = { [sortField]: dir };
+
+    const pageNum = page !== undefined ? Number(page) : undefined;
+    const limitNum = limit !== undefined ? Number(limit) : undefined;
+    const hasPagination = Number.isFinite(pageNum) && Number.isFinite(limitNum) && pageNum > 0 && limitNum > 0;
+
+    if (!hasPagination) {
+      const projects = await Project.find(listFilter).sort(sortObj);
+      const withUrls = projects.map((p) => addImageUrl(p, req));
+      return res.json(withUrls);
+    }
+
+    // Counts (for tabs): based on baseFilter only (ignore status)
+    const [totalAll, totalActive, totalInactive, total] = await Promise.all([
+      Project.countDocuments(baseFilter),
+      Project.countDocuments({ ...baseFilter, isActive: true }),
+      Project.countDocuments({ ...baseFilter, isActive: false }),
+      Project.countDocuments(listFilter),
+    ]);
+
+    const skip = (pageNum - 1) * limitNum;
+    const projects = await Project.find(listFilter)
+      .sort(sortObj)
+      .skip(Math.max(0, skip))
+      .limit(limitNum);
+
     const withUrls = projects.map((p) => addImageUrl(p, req));
-    res.json(withUrls);
+    res.json({
+      projects: withUrls,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      // Backward-compat aliases (some frontend code looks for these fields)
+      totalPages: Math.ceil(total / limitNum),
+      pagination: {
+        totalPages: Math.ceil(total / limitNum),
+        total,
+        page: pageNum,
+      },
+      counts: {
+        all: totalAll,
+        active: totalActive,
+        inactive: totalInactive,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Product from './Product.js';
+import Category from '../categories/Category.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadDir = process.env.UPLOAD_PATH || path.join(__dirname, '..', 'uploads');
@@ -48,14 +49,32 @@ const addImageUrl = (item, req) => {
 
 export const getProducts = async (req, res) => {
   try {
-    const { category, featured, search, page = 1, limit = 12, all } = req.query;
+    const {
+      category,
+      featured,
+      status,
+      search,
+      sortKey = 'sortOrder',
+      sortDirection = 'asc',
+      page = 1,
+      limit = 12,
+      all,
+    } = req.query;
+
     const filter = {};
-    if (!all) filter.isActive = true;
+
+    // Backward compatibility for public usage.
+    const includeAll = all === '1' || all === 'true' || all === true;
+    if (!includeAll && !status) filter.isActive = true;
+
     if (category) {
       const ids = typeof category === 'string' ? category.split(',').map((s) => s.trim()).filter(Boolean) : [category];
       filter.category = ids.length > 1 ? { $in: ids } : ids[0];
     }
-    if (featured === 'true') filter.featured = true;
+    if (featured === 'true' || status === 'featured') filter.featured = true;
+    if (status === 'active') filter.isActive = true;
+    if (status === 'inactive') filter.isActive = false;
+
     if (search) {
       const re = new RegExp(search, 'i');
       filter.$or = [
@@ -64,13 +83,52 @@ export const getProducts = async (req, res) => {
         { shortDescription: re },
       ];
     }
+
+    const dir = String(sortDirection).toLowerCase() === 'desc' ? -1 : 1;
+    const sortMap = {
+      name: 'name',
+      category: 'category',
+      featured: 'featured',
+      isActive: 'isActive',
+      sortOrder: 'sortOrder',
+    };
+    const sortField = sortMap[sortKey] || 'sortOrder';
+    const sort = { [sortField]: dir, sortOrder: 1 };
+
     const skip = (Number(page) - 1) * Number(limit);
-    const [products, total] = await Promise.all([
-      Product.find(filter).populate('category').sort('sortOrder').skip(skip).limit(Number(limit)),
+
+    const metaFilter = { ...filter };
+    delete metaFilter.featured;
+    delete metaFilter.isActive;
+
+    const [products, total, countAll, countFeatured, countActive, countInactive, categoryIds] = await Promise.all([
+      Product.find(filter).populate('category').sort(sort).skip(skip).limit(Number(limit)),
       Product.countDocuments(filter),
+      Product.countDocuments(metaFilter),
+      Product.countDocuments({ ...metaFilter, featured: true }),
+      Product.countDocuments({ ...metaFilter, isActive: true }),
+      Product.countDocuments({ ...metaFilter, isActive: false }),
+      Product.distinct('category', metaFilter),
     ]);
+
+    const categories = await Category.find({ _id: { $in: categoryIds.filter(Boolean) } })
+      .sort('name')
+      .select('_id name');
+
     const withUrls = products.map((p) => addImageUrl(p, req));
-    res.json({ products: withUrls, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    res.json({
+      products: withUrls,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit)),
+      counts: {
+        all: countAll,
+        featured: countFeatured,
+        active: countActive,
+        inactive: countInactive,
+      },
+      categories: categories.map((c) => ({ value: String(c._id), label: c.name })),
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
