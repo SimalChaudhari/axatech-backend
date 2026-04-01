@@ -8,6 +8,8 @@ import connectDB from './config/db.js';
 import authRoutes from './auth/routes.js';
 import homeRoutes from './home/routes.js';
 import licenseRoutes from './licenses/routes.js';
+import tssRoutes from './tss/routes.js';
+import tssContentRoutes from './tss/contentRoutes.js';
 import categoryRoutes from './categories/routes.js';
 import productRoutes from './products/routes.js';
 import serviceRoutes from './services/routes.js';
@@ -46,6 +48,8 @@ if (existsSync(uploadsDir)) {
 app.use('/api/auth', authRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/licenses', licenseRoutes);
+app.use('/api/tss', tssRoutes);
+app.use('/api/tss-content', tssContentRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/services', serviceRoutes);
