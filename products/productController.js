@@ -40,7 +40,9 @@ const addImageUrl = (item, req) => {
   const toJson = item.toJSON ? item.toJSON() : { ...item };
   const toUploadUrl = (p) => {
     if (p == null || typeof p !== 'string') return p;
-    return p.startsWith('http') ? p : `${url}/uploads/${p.replace(/\\/g, '/')}`;
+    // YouTube / external URLs: keep as-is (not a file under /uploads/)
+    if (/^https?:\/\//i.test(p)) return p;
+    return `${url}/uploads/${p.replace(/\\/g, '/')}`;
   };
   if (Array.isArray(toJson.images)) toJson.images = toJson.images.map((p) => (typeof p === 'string' ? toUploadUrl(p) : p));
   if (typeof toJson.demoVideoLink === 'string') toJson.demoVideoLink = toUploadUrl(toJson.demoVideoLink);

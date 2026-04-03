@@ -2,7 +2,6 @@
 node_modules/
 
 # Local env (secrets)
-.env
 .env.*.local
 
 # Uploads (user-generated content, if stored in repo)
